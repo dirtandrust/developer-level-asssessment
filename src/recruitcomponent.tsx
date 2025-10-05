@@ -1,42 +1,12 @@
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 
-type Level = 'junior' | 'mid' | 'senior';
-
-type CategoryAnswer = {
-  yes: number;
-  total: number;
-};
-
-type ResponsesType = {
-  junior: {
-    learning_growth: CategoryAnswer;
-    problem_solving: CategoryAnswer;
-    fundamentals: CategoryAnswer;
-    collaboration: CategoryAnswer;
-    professional_mindset: CategoryAnswer;
-  };
-  mid: {
-    ownership_autonomy: CategoryAnswer;
-    code_quality_architecture: CategoryAnswer;
-    technical_leadership: CategoryAnswer;
-    business_context: CategoryAnswer;
-    collaboration: CategoryAnswer;
-  };
-  senior: {
-    technical_depth: CategoryAnswer;
-    practical_judgment: CategoryAnswer;
-    communication_leadership: CategoryAnswer;
-    experience_quality: CategoryAnswer;
-  };
-};
-
 const DeveloperScoringSystem = () => {
-  const [currentLevel, setCurrentLevel] = useState<Level>('junior');
-  const [responses, setResponses] = useState<ResponsesType>({
+  const [currentLevel, setCurrentLevel] = useState('junior');
+  const [responses, setResponses] = useState({
     junior: {
       learning_growth: { yes: 0, total: 4 },
       problem_solving: { yes: 0, total: 4 },
@@ -59,6 +29,7 @@ const DeveloperScoringSystem = () => {
     }
   });
 
+  // Scoring weights and thresholds
   const weights = {
     senior: {
       technical_depth: 0.30,
@@ -82,7 +53,7 @@ const DeveloperScoringSystem = () => {
     }
   };
 
-  const thresholds: Record<Level, number> = {
+  const thresholds = {
     senior: 85,
     mid: 70,
     junior: 60
@@ -177,25 +148,25 @@ const DeveloperScoringSystem = () => {
     }
   };
 
+  // Calculate scores
   const calculateScores = useMemo(() => {
-    const allScores: Record<string, number> = {};
-
-    (Object.keys(responses) as Level[]).forEach(level => {
+    const allScores = {};
+    
+    Object.keys(responses).forEach(level => {
       let weightedScore = 0;
       Object.entries(responses[level]).forEach(([category, answers]) => {
         const categoryScore = (answers.yes / answers.total) * 100;
-        const weight = (weights[level] as Record<string, number>)[category] || 0;
-        weightedScore += categoryScore * weight;
+        weightedScore += categoryScore * (weights[level][category] || 0);
       });
       allScores[level] = Math.round(weightedScore * 10) / 10;
     });
 
-    let bestLevel: Level | null = null;
+    // Find best fit
+    let bestLevel = null;
     let bestScore = 0;
-    (Object.entries(allScores) as [string, number][]).forEach(([level, score]) => {
-      const lvl = level as Level;
-      if (score >= thresholds[lvl] && score > bestScore) {
-        bestLevel = lvl;
+    Object.entries(allScores).forEach(([level, score]) => {
+      if (score >= thresholds[level] && score > bestScore) {
+        bestLevel = level;
         bestScore = score;
       }
     });
@@ -203,30 +174,30 @@ const DeveloperScoringSystem = () => {
     return { allScores, bestLevel, bestScore };
   }, [responses]);
 
-  const updateResponse = (level: Level, category: string, increment: number) => {
+  const updateResponse = (level, category, increment) => {
     setResponses(prev => ({
       ...prev,
       [level]: {
         ...prev[level],
         [category]: {
-          ...(prev[level] as Record<string, CategoryAnswer>)[category],
+          ...prev[level][category],
           yes: Math.max(0, Math.min(
-            (prev[level] as Record<string, CategoryAnswer>)[category].total,
-            (prev[level] as Record<string, CategoryAnswer>)[category].yes + increment
+            prev[level][category].total,
+            prev[level][category].yes + increment
           ))
         }
       }
     }));
   };
 
-  const formatCategoryName = (category: string) => {
-    return category.split('_').map(word =>
+  const formatCategoryName = (category) => {
+    return category.split('_').map(word => 
       word.charAt(0).toUpperCase() + word.slice(1)
     ).join(' ');
   };
 
-  const getLevelColor = (level: Level) => {
-    switch (level) {
+  const getLevelColor = (level) => {
+    switch(level) {
       case 'junior': return 'bg-green-100 text-green-800';
       case 'mid': return 'bg-blue-100 text-blue-800';
       case 'senior': return 'bg-purple-100 text-purple-800';
@@ -243,8 +214,9 @@ const DeveloperScoringSystem = () => {
         <p className="text-gray-600">Answer questions across all levels to determine best fit</p>
       </div>
 
+      {/* Level Navigation */}
       <div className="flex justify-center space-x-4 mb-6">
-        {(['junior', 'mid', 'senior'] as Level[]).map(level => (
+        {['junior', 'mid', 'senior'].map(level => (
           <Button
             key={level}
             variant={currentLevel === level ? "default" : "outline"}
@@ -256,11 +228,12 @@ const DeveloperScoringSystem = () => {
         ))}
       </div>
 
+      {/* Current Level Questions */}
       <Card>
         <CardHeader>
           <CardTitle className="capitalize">{currentLevel} Level Assessment</CardTitle>
           <CardDescription>
-            Score: {allScores[currentLevel] || 0}/100
+            Score: {allScores[currentLevel] || 0}/100 
             {allScores[currentLevel] >= thresholds[currentLevel] && (
               <Badge className="ml-2 bg-green-100 text-green-800">Qualified</Badge>
             )}
@@ -294,20 +267,24 @@ const DeveloperScoringSystem = () => {
                 </div>
               </div>
               <Progress value={(answers.yes / answers.total) * 100} className="h-2" />
-
-              <div className="text-sm text-gray-700 pl-4 border-l-2 border-gray-200 mt-2">
-                <p className="font-medium mb-2">Questions:</p>
-                <ul className="list-disc list-inside space-y-2">
-                  {(questions[currentLevel] as Record<string, string[]>)[category]?.map((q, i) => (
-                    <li key={i}>{q}</li>
-                  ))}
-                </ul>
-              </div>
+              
+              {/* Show all questions */}
+              {questions[currentLevel]?.[category] && (
+                <div className="text-sm text-gray-700 pl-4 border-l-2 border-gray-200 mt-2">
+                  <p className="font-medium mb-2">Questions:</p>
+                  <ul className="list-disc list-inside space-y-2">
+                    {questions[currentLevel][category].map((q, i) => (
+                      <li key={i}>{q}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           ))}
         </CardContent>
       </Card>
 
+      {/* Results Summary */}
       <Card>
         <CardHeader>
           <CardTitle>Assessment Results</CardTitle>
@@ -333,9 +310,9 @@ const DeveloperScoringSystem = () => {
                 <div className="text-2xl font-bold mb-1">{score}</div>
                 <Progress value={score} className="h-2" />
                 <div className="text-xs text-gray-500 mt-1">
-                  Threshold: {thresholds[level as Level]}
+                  Threshold: {thresholds[level]}
                 </div>
-                {score >= thresholds[level as Level] && (
+                {score >= thresholds[level] && (
                   <Badge className="mt-2 bg-green-100 text-green-800">Qualified</Badge>
                 )}
               </div>

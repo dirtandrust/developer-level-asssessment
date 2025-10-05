@@ -61,42 +61,98 @@ const DeveloperScoringSystem = () => {
 
   // Sample questions for demo
   const questions = {
-    junior: {
-      learning_growth: [
-        "Do you actively seek feedback on your code?",
-        "Do you research before asking for help?",
-        "Have you refactored code without being asked?",
-        "Do you read others' code to learn?"
-      ],
-      problem_solving: [
-        "Do you debug systematically?",
-        "Do you break down complex problems?",
-        "Do you try multiple approaches when stuck?",
-        "Do you test with different inputs?"
-      ]
-    },
-    mid: {
-      ownership_autonomy: [
-        "Have you owned a feature end-to-end?",
-        "Do you identify requirement issues proactively?",
-        "Have you made time-saving technical decisions?",
-        "Can you work independently for weeks?"
-      ]
-    },
-    senior: {
-      technical_depth: [
-        "Have you designed 10M+ user systems?",
-        "Can you explain database indexing trade-offs?",
-        "Have you debugged N+1 query issues?",
-        "Do you consider memory allocation patterns?"
-      ]
-    }
-  };
+  junior: {
+    learning_growth: [
+      "Do you actively seek feedback on your code from more experienced developers?",
+      "When you don't understand something, do you research it before asking for help?",
+      "Have you ever refactored your own code to make it cleaner without being asked?",
+      "Do you read code written by others to learn new approaches?"
+    ],
+    problem_solving: [
+      "When debugging, do you use print statements/debuggers systematically rather than randomly?",
+      "Do you break down complex problems into smaller pieces before coding?",
+      "When stuck on a problem, do you try multiple approaches before giving up?",
+      "Do you test your code with different inputs, including edge cases?"
+    ],
+    fundamentals: [
+      "Do you understand why we use version control beyond just 'it's required'?",
+      "Can you explain what happens when you type a URL into a browser?",
+      "Do you write comments that explain 'why' rather than just 'what'?",
+      "Do you consider how your code will be read by other developers?"
+    ],
+    collaboration: [
+      "Do you ask clarifying questions when requirements seem unclear?",
+      "Are you comfortable admitting when you don't know something?",
+      "Do you proactively communicate when you're blocked on a task?"
+    ],
+    professional_mindset: [
+      "Do you research the company/product before working on features?",
+      "Do you consider the user impact of the code you write?"
+    ]
+  },
+  mid: {
+    ownership_autonomy: [
+      "Have you owned a feature end-to-end from requirements to production deployment?",
+      "Do you proactively identify potential issues in requirements before starting implementation?",
+      "Have you made a technical decision that saved the team significant time or effort?",
+      "Can you work independently for days/weeks without constant check-ins?"
+    ],
+    code_quality_architecture: [
+      "Do you consider the maintainability of your code for developers who will work on it later?",
+      "Have you refactored a significant piece of code to improve its structure?",
+      "Do you think about error handling and edge cases during the design phase, not just implementation?",
+      "Have you designed database schemas or API contracts that other developers use?"
+    ],
+    technical_leadership: [
+      "Have you reviewed code and provided constructive feedback to improve it?",
+      "Do you speak up in technical discussions when you disagree with proposed solutions?",
+      "Have you helped onboard a new team member or junior developer?",
+      "Can you estimate project timelines that consistently prove accurate?"
+    ],
+    business_context: [
+      "Do you consider performance implications when choosing between different implementation approaches?",
+      "Have you pushed back on a feature request due to technical complexity or risk?",
+      "Do you understand how your work connects to business metrics or user outcomes?",
+      "Have you suggested technical improvements that directly benefited users or business goals?"
+    ],
+    collaboration: [
+      "Do you communicate technical blockers to non-technical stakeholders effectively?",
+      "Have you worked directly with product managers or designers to refine requirements?",
+      "Can you translate business requirements into technical tasks without heavy guidance?"
+    ]
+  },
+  senior: {
+    technical_depth: [
+      "Have you designed a system that handles 10M+ daily active users?",
+      "Can you explain database indexing trade-offs without looking it up?",
+      "Have you debugged a production performance issue caused by N+1 queries?",
+      "Do you regularly consider memory allocation patterns when writing code?"
+    ],
+    practical_judgment: [
+      "Have you ever recommended NOT building a feature due to technical complexity vs business value?",
+      "When inheriting legacy code, do you refactor incrementally rather than rewriting from scratch?",
+      "Have you shipped a 'good enough' solution knowing it wasn't perfect?",
+      "Do you estimate tasks by breaking them into smaller components first?",
+      "Have you made architecture decisions that prevented future technical debt?"
+    ],
+    communication_leadership: [
+      "Have you successfully convinced a team to change technical direction?",
+      "Can non-technical stakeholders understand your technical explanations?",
+      "Have you mentored a junior developer who later received a promotion?",
+      "Do you document architectural decisions for future developers?"
+    ],
+    experience_quality: [
+      "Have you worked on a team where your technical decisions had significant business impact?",
+      "Have you been responsible for system uptime in a production environment?",
+      "Have you led a technical migration that improved system performance?"
+    ]
+  }
+};
 
   // Calculate scores
   const calculateScores = useMemo(() => {
     const allScores = {};
-    
+
     Object.keys(responses).forEach(level => {
       let weightedScore = 0;
       Object.entries(responses[level]).forEach(([category, answers]) => {
@@ -136,13 +192,13 @@ const DeveloperScoringSystem = () => {
   };
 
   const formatCategoryName = (category) => {
-    return category.split('_').map(word => 
+    return category.split('_').map(word =>
       word.charAt(0).toUpperCase() + word.slice(1)
     ).join(' ');
   };
 
   const getLevelColor = (level) => {
-    switch(level) {
+    switch (level) {
       case 'junior': return 'bg-green-100 text-green-800';
       case 'mid': return 'bg-blue-100 text-blue-800';
       case 'senior': return 'bg-purple-100 text-purple-800';
@@ -178,7 +234,7 @@ const DeveloperScoringSystem = () => {
         <CardHeader>
           <CardTitle className="capitalize">{currentLevel} Level Assessment</CardTitle>
           <CardDescription>
-            Score: {allScores[currentLevel] || 0}/100 
+            Score: {allScores[currentLevel] || 0}/100
             {allScores[currentLevel] >= thresholds[currentLevel] && (
               <Badge className="ml-2 bg-green-100 text-green-800">Qualified</Badge>
             )}
@@ -212,13 +268,13 @@ const DeveloperScoringSystem = () => {
                 </div>
               </div>
               <Progress value={(answers.yes / answers.total) * 100} className="h-2" />
-              
+
               {/* Show sample questions if available */}
               {questions[currentLevel]?.[category] && (
                 <div className="text-xs text-gray-500 pl-4">
                   <p>Sample questions:</p>
                   <ul className="list-disc list-inside space-y-1 mt-1">
-                    {questions[currentLevel][category].slice(0, 2).map((q, i) => (
+                    {questions[currentLevel][category].map((q, i) => (
                       <li key={i}>{q}</li>
                     ))}
                   </ul>
